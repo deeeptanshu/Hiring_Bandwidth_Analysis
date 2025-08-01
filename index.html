@@ -3,119 +3,147 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hiring Plan Calculator</title>
+  <title>Hiring Bandwidth Analysis</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
   <style>
     body {
-      font-family: sans-serif;
-      background-color: #f0f2f5;
-      padding: 2rem;
+      font-family: 'Sora', sans-serif;
     }
-    .container {
-      background: white;
-      padding: 2rem;
-      border-radius: 8px;
-      max-width: 800px;
-      margin: auto;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    @keyframes shimmer {
+      0% { background-position: -1000px 0; }
+      100% { background-position: 1000px 0; }
     }
-    h1 {
-      text-align: center;
+    .shimmer {
+      background: linear-gradient(90deg, #f0f0f0 25%, #e2e2e2 50%, #f0f0f0 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
     }
-    label {
-      display: block;
-      margin-top: 1rem;
-      font-weight: bold;
+    @keyframes float {
+      0% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+      100% { transform: translateY(0); }
     }
-    input {
-      width: 100%;
-      padding: 0.5rem;
-      margin-top: 0.3rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 0 rgba(0, 123, 255, 0.4); }
+      50% { box-shadow: 0 0 20px rgba(0, 123, 255, 0.6); }
     }
-    button {
-      margin-top: 1.5rem;
-      padding: 10px;
-      width: 100%;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    .result {
-      margin-top: 2rem;
-      padding: 1rem;
-      background-color: #e8f0fe;
-      border-left: 4px solid #007bff;
+    .floating-icon {
+      animation: float 3s ease-in-out infinite, pulse-glow 2s ease-in-out infinite;
     }
   </style>
 </head>
-<body>
-  <div class="container">
-    <h1>Hiring Plan Calculator</h1>
-    <label>Number of roles to hire:</label>
-    <input type="number" id="numRoles" />
+<body class="bg-gradient-to-b from-slate-50 to-blue-50 min-h-screen p-4">
+  <div class="container mx-auto max-w-4xl p-6 bg-white rounded-2xl shadow-lg">
+    <h1 class="text-3xl font-bold text-center text-blue-600 mb-6">Interview Load Calculator</h1>
 
-    <label>Timeframe to hire (weeks):</label>
-    <input type="number" id="timeframe" />
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div>
+        <label class="font-semibold">1. Number of roles to hire</label>
+        <input type="number" id="numRoles" placeholder="e.g. 10" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label class="font-semibold">2. Timeframe to hire (weeks)</label>
+        <input type="number" id="timeframe" placeholder="e.g. 6" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label class="font-semibold">3. Avg. interview time per candidate (hrs)</label>
+        <input type="number" id="timePerCandidate" value="3" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label class="font-semibold">4. Number of interviewers</label>
+        <input type="number" id="numInterviewers" placeholder="e.g. 5" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label class="font-semibold">5. Hours per interviewer per week</label>
+        <input type="number" id="hoursPerInterviewer" placeholder="e.g. 4" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label class="font-semibold">6. Choose Success Rate</label>
+        <select id="rateOption" onchange="toggleCustomRates()" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="default">Use default rates (20% screen, 30% interview, 50% offer)</option>
+          <option value="custom">Enter custom rates</option>
+        </select>
+      </div>
+    </div>
 
-    <label>Screening pass rate (%):</label>
-    <input type="number" id="screenRate" value="20" />
+    <div id="customRates" class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6 hidden">
+      <div>
+        <label class="font-semibold">Screening pass rate (%)</label>
+        <input type="number" id="screenRate" placeholder="e.g. 20" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label class="font-semibold">Interview pass rate (%)</label>
+        <input type="number" id="interviewRate" placeholder="e.g. 30" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+      <div>
+        <label class="font-semibold">Offer acceptance rate (%)</label>
+        <input type="number" id="offerRate" placeholder="e.g. 50" class="w-full mt-2 px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+      </div>
+    </div>
 
-    <label>Interview pass rate (%):</label>
-    <input type="number" id="interviewRate" value="30" />
+    <div class="flex items-center mt-6">
+      <input type="checkbox" id="useIntervue" class="mr-3 scale-125" />
+      <label for="useIntervue" class="text-sm font-medium">What if you used <strong>Intervue</strong> for 30% of interviews?</label>
+    </div>
 
-    <label>Offer acceptance rate (%):</label>
-    <input type="number" id="offerRate" value="50" />
+    <button onclick="calculatePlan()" class="mt-8 bg-blue-600 hover:bg-blue-700 text-white text-lg font-semibold py-3 rounded-lg w-full">Calculate Interview Load</button>
 
-    <label>Avg. interview time per candidate (hours):</label>
-    <input type="number" id="timePerCandidate" value="3" />
-
-    <label>Number of interviewers available:</label>
-    <input type="number" id="numInterviewers" />
-
-    <label>Hours per interviewer per week:</label>
-    <input type="number" id="hoursPerInterviewer" />
-
-    <button onclick="calculatePlan()">Calculate Hiring Plan</button>
-
-    <div id="output" class="result"></div>
+    <div id="output" class="mt-8 p-6 bg-blue-50 border-l-4 border-blue-500 rounded-md text-blue-900"></div>
   </div>
 
   <script>
+    function toggleCustomRates() {
+      const selected = document.getElementById("rateOption").value;
+      document.getElementById("customRates").style.display = selected === "custom" ? "grid" : "none";
+    }
+
     function calculatePlan() {
       const roles = parseInt(document.getElementById("numRoles").value);
       const weeks = parseInt(document.getElementById("timeframe").value);
-      const screenRate = parseFloat(document.getElementById("screenRate").value) / 100;
-      const interviewRate = parseFloat(document.getElementById("interviewRate").value) / 100;
-      const offerRate = parseFloat(document.getElementById("offerRate").value) / 100;
       const timePerCandidate = parseFloat(document.getElementById("timePerCandidate").value);
       const numInterviewers = parseInt(document.getElementById("numInterviewers").value);
       const hoursPerInterviewer = parseFloat(document.getElementById("hoursPerInterviewer").value);
+      const useIntervue = document.getElementById("useIntervue").checked;
+      const rateOption = document.getElementById("rateOption").value;
 
-      const successRate = screenRate * interviewRate * offerRate;
+      let screenRate = 20, interviewRate = 30, offerRate = 50;
+
+      if (rateOption === "custom") {
+        screenRate = parseFloat(document.getElementById("screenRate").value);
+        interviewRate = parseFloat(document.getElementById("interviewRate").value);
+        offerRate = parseFloat(document.getElementById("offerRate").value);
+      }
+
+      const successRate = (screenRate / 100) * (interviewRate / 100) * (offerRate / 100);
       const candidatesNeeded = Math.ceil(roles / successRate);
-      const totalInterviewHours = candidatesNeeded * timePerCandidate;
-      const totalAvailableHours = numInterviewers * hoursPerInterviewer * weeks;
+      let interviewHoursRequired = candidatesNeeded * timePerCandidate;
 
-      let warning = "";
-      if (totalAvailableHours < totalInterviewHours) {
-        warning = `<p style='color: red'><strong>⚠️ Warning:</strong> You do not have enough interviewer capacity. You need <strong>${totalInterviewHours} hrs</strong>, but only have <strong>${totalAvailableHours} hrs</strong> available.</p>`;
+      if (useIntervue) {
+        interviewHoursRequired *= 0.7;
+      }
+
+      const totalAvailableHours = numInterviewers * hoursPerInterviewer * weeks;
+      const shortfall = Math.max(0, interviewHoursRequired - totalAvailableHours);
+
+      let recommendation = "";
+      if (shortfall > 0) {
+        recommendation = `
+          <p><strong>⚠️ You are short by <span class='text-red-600'>${shortfall.toFixed(1)} hours</span>.</strong></p>
+          <p>This could delay hiring or overburden your engineers.</p>
+          <p><strong>🧩 Tip:</strong> Let <a href='https://www.intervue.io' target='_blank' class='text-blue-700 underline'>Intervue.io</a> cover the shortfall with expert panels.</p>
+        `;
       } else {
-        warning = `<p style='color: green'><strong>✅ Capacity OK:</strong> You have enough bandwidth for interviews.</p>`;
+        recommendation = `<p><strong>✅ You have sufficient interview capacity to meet your hiring goals.</strong></p>`;
       }
 
       const output = `
-        <p><strong>Total Candidates Needed:</strong> ${candidatesNeeded}</p>
-        <p><strong>Total Interview Hours:</strong> ${totalInterviewHours} hours</p>
-        ${warning}
-        <p><strong>Estimated Time to Fill per Role:</strong> ~${Math.round(weeks / roles)} weeks</p>
+        <p><strong>Candidates Needed:</strong> ${candidatesNeeded}</p>
+        <p><strong>Total Interview Hours Required:</strong> ${interviewHoursRequired.toFixed(1)} hrs</p>
+        <p><strong>Total Available Interviewer Hours:</strong> ${totalAvailableHours.toFixed(1)} hrs</p>
+        ${recommendation}
       `;
+
       document.getElementById("output").innerHTML = output;
     }
   </script>
